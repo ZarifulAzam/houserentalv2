@@ -15,41 +15,19 @@ if (isset($_SESSION['user'])) {
     exit;
 }
 
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $pass = $_POST['password'] ?? '';
-    
-    if ($email && $pass) {
-        $stmt = $mysqli->prepare('SELECT id, name, email, password, role FROM users WHERE email = ? LIMIT 1');
-        $stmt->bind_param('s', $email);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $user = $res->fetch_assoc();
-        
-        if ($user && password_verify($pass, $user['password'])) {
-            $_SESSION['user'] = [
-                'id' => (int)$user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'role' => $user['role']
-            ];
-            
-            $role = $user['role'];
-            if ($role === 'admin') {
-                header('Location: modules/admin/dashboard.php');
-            } elseif ($role === 'owner') {
-                header('Location: modules/owner/manage.php');
-            } else {
-                header('Location: modules/tenant/browse.php');
-            }
-            exit;
-        } else {
-            $error = 'Invalid email or password';
-        }
-    } else {
-        $error = 'Please fill in all fields';
+// Get basic stats
+$available_count = 0;
+$total_count = 0;
+
+try {
+    $result = $mysqli->query('SELECT COUNT(*) as total, SUM(status="available") as available FROM house_information');
+    if ($result) {
+        $stats = $result->fetch_assoc();
+        $total_count = (int)$stats['total'];
+        $available_count = (int)$stats['available'];
     }
+} catch (Exception $e) {
+    // Silently handle database errors for guest users
 }
 ?>
 <!doctype html>
@@ -57,49 +35,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>House Rental - Login</title>
+    <title>House Rental - Find Your Perfect Home</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/landing.css">
     <script defer src="assets/js/script.js"></script>
 </head>
 <body>
 <header>
     <nav>
         <div class="logo">
-            <h2 style="margin:0; color:var(--accent);">🏠 House Rental</h2>
+            <h2 style="margin:0; color:var(--accent);">House Rental</h2>
+        </div>
+        <div class="nav-links">
+            <a href="modules/tenant/browse.php">Browse Houses</a>
+            <a href="login.php" class="btn">Sign In</a>
+            <a href="register.php" class="btn primary">Get Started</a>
         </div>
     </nav>
 </header>
+
 <main>
-    <div class="container" style="max-width: 400px; margin: 60px auto;">
-        <h2 style="text-align: center; margin-bottom: 30px;">Welcome Back</h2>
+    <div class="container landing-main">
+        <h1 class="landing-title" style="font-size: 3rem; margin-bottom: 20px;">Find Your Perfect Home</h1>
+        <p class="landing-subtitle">
+            Connect with trusted property owners and discover houses that match your needs and budget.
+        </p>
         
-        <?php if ($error): ?>
-            <div class="flash error">
-                <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <form method="post">
-            <label>Email Address
-                <input class="input" type="email" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
-            </label>
-            <label>Password
-                <input class="input" type="password" name="password" required>
-            </label>
-            <button class="btn primary" type="submit" style="width: 100%; margin-top: 8px;">Login</button>
-        </form>
-        
-        <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #1f2437;">
-            <p>Don't have an account?</p>
-            <a href="register.php" class="btn" style="display: inline-block;">Create Account</a>
+        <div class="landing-actions">
+            <a href="register.php" class="btn primary btn-enhanced">Start Your Search</a>
+            <a href="modules/tenant/browse.php" class="btn btn-enhanced">Browse Houses</a>
         </div>
         
-        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted);">
-            <p><strong>Demo Accounts:</strong></p>
-            <p>Admin: admin@example.com / Admin@123</p>
+        <?php if ($available_count > 0): ?>
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number available"><?php echo $available_count; ?></span>
+                    <span class="stat-label">Available Now</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number total"><?php echo $total_count; ?></span>
+                    <span class="stat-label">Total Properties</span>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    
+    <div class="role-cards">
+        <div class="container role-card">
+            <div class="role-icon tenant-icon">🏠</div>
+            <h3 style="color: var(--text); margin-bottom: 12px;">For Tenants</h3>
+            <p style="color: var(--muted); margin-bottom: 20px;">Browse and rent houses from verified property owners</p>
+            <a href="register.php?role=tenant" class="btn primary">Find Houses</a>
+        </div>
+        
+        <div class="container role-card">
+            <div class="role-icon owner-icon">🏡</div>
+            <h3 style="color: var(--text); margin-bottom: 12px;">For Property Owners</h3>
+            <p style="color: var(--muted); margin-bottom: 20px;">List your properties and connect with reliable tenants</p>
+            <a href="register.php?role=owner" class="btn primary">List Property</a>
         </div>
     </div>
 </main>
+
 <footer>
     <p>&copy; <?php echo date('Y'); ?> House Rental System</p>
 </footer>

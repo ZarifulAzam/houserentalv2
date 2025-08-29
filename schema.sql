@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS rental_requests (
 
 -- Seed admin and owner
 INSERT INTO users(name,email,password,role) VALUES
-('Admin','admin@example.com', 'admin@123', 'admin')
+('Admin','admin@example.com', '$2y$10$0Zy8I0wQv3k2Fq0qYlq3EOcVQF3bWm2n2Qxw8Z3mX1n6m8wq5y2nO', 'admin')
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 -- Password hash corresponds to: Admin@123
 
