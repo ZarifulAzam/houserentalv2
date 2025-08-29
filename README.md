@@ -1,10 +1,6 @@
-I’ve gone through your uploaded file and reorganized everything into a **well-structured, comprehensive technical documentation**. I preserved every detail (no parts missed) and arranged them into a clean hierarchy for clarity.
 
-Here’s the organized documentation:
 
----
-
-# 📘 House Rental System – Complete Technical Documentation
+House Rental System – Complete Technical Documentation
 
 ## 1. Project Overview
 
