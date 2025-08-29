@@ -1,6 +1,5 @@
+ House Rental System – Complete Technical Documentation
 
-
-House Rental System – Complete Technical Documentation
 
 ## 1. Project Overview
 
